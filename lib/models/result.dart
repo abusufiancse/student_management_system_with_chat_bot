@@ -4,6 +4,7 @@ class Result {
   final String subject;
   final double marks;
   final String grade;
+  final String? comment;
 
   Result({
     this.id,
@@ -11,17 +12,17 @@ class Result {
     required this.subject,
     required this.marks,
     required this.grade,
+    this.comment,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'student_id': studentId,
-      'subject': subject,
-      'marks': marks,
-      'grade': grade,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'student_id': studentId,
+    'subject': subject,
+    'marks': marks,
+    'grade': grade,
+    'comment': comment,
+  };
 
   factory Result.fromMap(Map<String, dynamic> map) {
     return Result(
@@ -30,6 +31,7 @@ class Result {
       subject: map['subject'],
       marks: map['marks'],
       grade: map['grade'],
+      comment: map['comment'],
     );
   }
 }

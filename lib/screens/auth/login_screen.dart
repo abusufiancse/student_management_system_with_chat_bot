@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:student_management_system/screens/auth/parent_access_screen.dart';
 import 'package:student_management_system/screens/auth/student_register_screen.dart';
 import '../../db/database_helper.dart';
-import '../deshboard/teacher_dashboard.dart';
-import '../deshboard/student_dashboard.dart';
+import '../../utils/session_manager.dart';
+import '../teacher/teacher_dashboard.dart';
+import '../students/student_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,8 +27,17 @@ class _LoginScreenState extends State<LoginScreen>
     _tabController = TabController(length: 3, vsync: this);
   }
 
+  @override
+  void dispose() {
+    emailCtrl.dispose();
+    passCtrl.dispose();
+    rollCtrl.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
+
   // ================= STUDENT LOGIN =================
-  void studentLogin() async {
+  Future<void> studentLogin() async {
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
 
@@ -49,6 +59,10 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
+    // ✅ SAVE SESSION
+    await SessionManager.saveStudentSession(user.id!);
+
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -58,11 +72,15 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ================= TEACHER LOGIN =================
-  void teacherLogin() {
+  Future<void> teacherLogin() async {
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text.trim();
 
     if (email == 'teacher@gmail.com' && pass == 'teacher123') {
+      // ✅ SAVE SESSION
+      await SessionManager.saveTeacherSession();
+
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const TeacherDashboard()),
@@ -73,17 +91,22 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ================= PARENT ACCESS =================
-  void parentAccess() {
-    if (rollCtrl.text.trim().isEmpty) {
+  Future<void> parentAccess() async {
+    final roll = rollCtrl.text.trim();
+
+    if (roll.isEmpty) {
       _snack('Enter student roll number');
       return;
     }
 
+    // ✅ SAVE SESSION
+    await SessionManager.saveParentSession(roll);
+
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            ParentAccessScreen(initialRoll: rollCtrl.text.trim()),
+        builder: (_) => ParentAccessScreen(initialRoll: roll),
       ),
     );
   }
@@ -134,20 +157,24 @@ class _LoginScreenState extends State<LoginScreen>
             obscureText: true,
           ),
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: studentLogin,
-            child: const Text('Login'),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: studentLogin,
+              child: const Text('Login'),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => const StudentRegisterScreen()),
+                  builder: (_) => const StudentRegisterScreen(),
+                ),
               );
             },
             child: const Text('Student Registration'),
-          )
+          ),
         ],
       ),
     );
@@ -169,16 +196,19 @@ class _LoginScreenState extends State<LoginScreen>
             obscureText: true,
           ),
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: teacherLogin,
-            child: const Text('Login as Teacher'),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: teacherLogin,
+              child: const Text('Login as Teacher'),
+            ),
           ),
           const SizedBox(height: 10),
           const Text(
-            'Demo Login:\nteacher@gmail.com\nteacher123',
+            'Demo Login\nteacher@gmail.com\nteacher123',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
-          )
+          ),
         ],
       ),
     );
@@ -192,20 +222,24 @@ class _LoginScreenState extends State<LoginScreen>
         children: [
           TextField(
             controller: rollCtrl,
-            decoration:
-            const InputDecoration(labelText: 'Student Roll / Index Number'),
+            decoration: const InputDecoration(
+              labelText: 'Student Roll / Index Number',
+            ),
           ),
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: parentAccess,
-            child: const Text('View Child Details'),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: parentAccess,
+              child: const Text('View Child Details'),
+            ),
           ),
           const SizedBox(height: 10),
           const Text(
             'Parents can access student details\nusing roll/index number',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
-          )
+          ),
         ],
       ),
     );

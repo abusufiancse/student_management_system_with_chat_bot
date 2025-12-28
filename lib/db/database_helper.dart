@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3, // ⬅️ increase version
+      version: 10, // ⬅️ increase version
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -54,39 +54,53 @@ class DatabaseHelper {
 
 
   Future<void> _createDB(Database db, int version) async {
+    // USERS
     await db.execute('''
-      CREATE TABLE students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        name TEXT,
-        class TEXT,
-        roll TEXT UNIQUE,
-        guardian TEXT
-      )
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE,
+      password TEXT,
+      role TEXT,
+      approved INTEGER
+    )
+  ''');
 
-    ''');
-
+    // STUDENTS
     await db.execute('''
-      CREATE TABLE fees (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER,
-        amount REAL,
-        due_date TEXT,
-        status TEXT
-      )
-    ''');
+    CREATE TABLE students (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      name TEXT,
+      class TEXT,
+      roll TEXT UNIQUE,
+      guardian TEXT
+    )
+  ''');
 
+    // RESULTS
     await db.execute('''
-      CREATE TABLE results (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id INTEGER,
-        subject TEXT,
-        marks REAL,
-        grade TEXT
-      )
-    ''');
+    CREATE TABLE results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER,
+      subject TEXT,
+      marks REAL,
+      grade TEXT,
+      comment TEXT
+    )
+  ''');
 
+    // FEES
+    await db.execute('''
+    CREATE TABLE fees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id INTEGER,
+      amount REAL,
+      due_date TEXT,
+      status TEXT
+    )
+  ''');
   }
+
   Future<int> insertStudent(Student student) async {
     final db = await instance.database;
 
@@ -169,19 +183,27 @@ class DatabaseHelper {
 
 // LOGIN USER
   Future<User?> loginUser(String email, String password) async {
-    final db = await database;
+    try {
+      final db = await database;
 
-    final res = await db.query(
-      'users',
-      where: 'email = ? AND password = ?',
-      whereArgs: [email, password],
-    );
+      final res = await db.query(
+        'users',
+        where: 'email = ? AND password = ?',
+        whereArgs: [email, password],
+      );
 
-    if (res.isNotEmpty) {
-      return User.fromMap(res.first);
+      if (res.isNotEmpty) {
+        return User.fromMap(res.first);
+      }
+      return null;
+    } catch (e, s) {
+      debugPrint('❌ LOGIN ERROR: $e');
+      debugPrint('📌 STACK: $s');
+      return null; // NEVER crash
     }
-    return null;
   }
+
+
 // GET users by role
   Future<List<User>> getAllUsersByRole(String role) async {
     final db = await database;

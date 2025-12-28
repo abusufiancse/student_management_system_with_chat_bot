@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../db/database_helper.dart';
-import '../deshboard/parent_dashboard.dart';
+import '../parents/parent_dashboard.dart';
 
 class ParentAccessScreen extends StatefulWidget {
   final String initialRoll;
