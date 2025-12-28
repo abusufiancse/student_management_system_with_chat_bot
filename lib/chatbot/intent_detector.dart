@@ -10,6 +10,13 @@ class IntentDetector {
       return 'GREETING';
     }
 
+    // ⏰ Due / overdue
+    if (q.contains('due') ||
+        q.contains('overdue') ||
+        q.contains('late')) {
+      return 'DUE_REMINDER';
+    }
+
     // 👨‍👩‍👧 Parent-style questions
     if (q.contains('child') ||
         q.contains('kid') ||
@@ -26,7 +33,7 @@ class IntentDetector {
     }
 
     // 🎓 Student questions
-    if (q.contains('fee') || q.contains('payment') || q.contains('due')) {
+    if (q.contains('fee') || q.contains('payment')) {
       return 'FEE';
     }
 

@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:student_management_system/db/database_helper.dart';
-import 'package:student_management_system/screens/teacher/teacher_result_entry_screen.dart';
-import 'package:student_management_system/screens/teacher/edit_result_screen.dart';
-
+import 'package:student_management_system/screens/teacher/student_details_screen.dart';
 import '../../models/user.dart';
 import '../../models/student.dart';
-import '../../models/result.dart';
 import '../auth/login_screen.dart';
-import '../student_edit_screen.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -79,156 +75,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     return DatabaseHelper.instance.getStudentByUserId(userId);
   }
 
-  // ================= STUDENT DETAILS SHEET =================
-  void showStudentDetails(BuildContext context, Student s, User u) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  height: 4,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Text(
-                s.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text('Class: ${s.studentClass}'),
-              Text('Roll: ${s.roll}'),
-              Text('Guardian: ${s.guardian}'),
-              Text(
-                'Status: ${u.approved == 1 ? "Approved" : "Pending"}',
-                style: TextStyle(
-                  color:
-                  u.approved == 1 ? Colors.green : Colors.orange,
-                ),
-              ),
-
-              const Divider(height: 24),
-
-              // ================= RESULTS SECTION =================
-              const Text(
-                'Academic Results',
-                style:
-                TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-
-              FutureBuilder<List<Result>>(
-                future: DatabaseHelper.instance
-                    .getResultsByStudent(s.id!),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData ||
-                      snapshot.data!.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('No results added yet'),
-                    );
-                  }
-
-                  final results = snapshot.data!;
-                  return Column(
-                    children: results.map((r) {
-                      return Card(
-                        child: ListTile(
-                          title: Text(r.subject),
-                          subtitle: Text(
-                              'Marks: ${r.marks} | Grade: ${r.grade}'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () async {
-                              final updated =
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      EditResultScreen(result: r),
-                                ),
-                              );
-
-                              if (updated == true) {
-                                Navigator.pop(context);
-                                loadStudents();
-                              }
-                            },
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
-
-              const Divider(height: 24),
-
-              // ================= ACTIONS =================
-              ListTile(
-                leading: const Icon(Icons.bar_chart),
-                title: const Text('Add Result'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TeacherResultEntryScreen(
-                        studentId: s.id!,
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              ListTile(
-                leading: const Icon(Icons.edit),
-                title: const Text('Edit Profile'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          StudentEditScreen(userId: u.id!),
-                    ),
-                  );
-                },
-              ),
-
-              ListTile(
-                leading:
-                const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete Student'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await confirmDelete(u);
-                },
-              ),
-
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   // ================= STUDENT TILE =================
   Widget studentTile(User u) {
@@ -243,7 +89,15 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           child: ListTile(
             onTap: () {
               if (s != null) {
-                showStudentDetails(context, s, u);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => StudentDetailsScreen(
+                      student: s,
+                      user: u,
+                    ),
+                  ),
+                );
               }
             },
             title: Text(

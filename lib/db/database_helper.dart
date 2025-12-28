@@ -31,6 +31,38 @@ class DatabaseHelper {
     );
 
   }
+  // ================= FEE SUMMARY =================
+  Future<Map<String, dynamic>> getFeeSummary(int studentId) async {
+    final db = await database;
+
+    final all = await db.query(
+      'fees',
+      where: 'student_id = ?',
+      whereArgs: [studentId],
+    );
+
+    double paid = 0;
+    double due = 0;
+    String? lastDueDate;
+
+    for (final f in all) {
+      final amount = (f['amount'] as num).toDouble();
+      if (f['status'] == 'PAID') {
+        paid += amount;
+      } else {
+        due += amount;
+        lastDueDate = f['due_date'] as String;
+      }
+    }
+
+    return {
+      'total': paid + due,
+      'paid': paid,
+      'due': due,
+      'lastDueDate': lastDueDate,
+    };
+  }
+
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''

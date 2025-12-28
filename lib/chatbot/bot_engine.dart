@@ -14,11 +14,11 @@ class BotEngine {
     // 👋 GREETING
     if (intent == 'GREETING') {
       return role == 'parent'
-          ? "Hello! 😊 I can help you with your child's results, fees, and profile."
-          : "Hi! 👋 I can help you with your results, fees, and profile.";
+          ? "Hello 😊 I can help you with your child's fees, results, and profile."
+          : "Hi 👋 I can help you with your fees, results, and profile.";
     }
 
-    // 🔎 Fetch student once
+    // 🔎 Load student
     final Student? student =
     await db.getStudentByUserId(studentId);
 
@@ -26,42 +26,62 @@ class BotEngine {
       return "Student data not found.";
     }
 
-    // 💰 FEES
+    // ================= FEES & PAYMENT =================
     if (intent == 'FEE' || intent == 'PARENT_FEE') {
-      final fees = await db.getFeesByStudent(studentId);
-      if (fees.isEmpty) {
+      final summary = await db.getFeeSummary(studentId);
+
+      if (summary['total'] == 0) {
         return role == 'parent'
             ? "No fee records found for your child."
             : "No fee records found.";
       }
 
-      final latest = fees.last;
-      return role == 'parent'
-          ? "Your child's fee amount is ৳${latest.amount}. "
-          "Due date: ${latest.dueDate}. Status: ${latest.status}."
-          : "Your fee amount is ৳${latest.amount}. "
-          "Due date: ${latest.dueDate}. Status: ${latest.status}.";
+      final who = role == 'parent' ? "Your child" : "You";
+
+      final due = summary['due'] as double;
+
+      if (due > 0) {
+        return "$who have total fees ৳${summary['total']}. "
+            "Paid: ৳${summary['paid']}, Due: ৳$due. "
+            "Please pay before ${summary['lastDueDate']}.";
+      } else {
+        return "✅ $who have no pending dues. All fees are paid.";
+      }
     }
 
-    // 📊 RESULTS
+    // ⏰ DUE / OVERDUE REMINDER
+    if (intent == 'DUE_REMINDER') {
+      final summary = await db.getFeeSummary(studentId);
+
+      if (summary['due'] <= 0) {
+        return "✅ There are no pending fees at the moment.";
+      }
+
+      return "⚠️ Pending fee: ৳${summary['due']}. "
+          "Last due date is ${summary['lastDueDate']}. "
+          "Please clear it to avoid late penalties.";
+    }
+
+    // ================= RESULTS =================
     if (intent == 'RESULT' || intent == 'PARENT_RESULT') {
       final results = await db.getResultsByStudent(studentId);
+
       if (results.isEmpty) {
         return role == 'parent'
             ? "No results published yet for your child."
             : "No results published yet.";
       }
 
+      final who = role == 'parent' ? "Your child's" : "Your";
+
       final summary = results
           .map((r) => "${r.subject}: ${r.grade}")
           .join(', ');
 
-      return role == 'parent'
-          ? "Your child's academic results are: $summary."
-          : "Your academic results are: $summary.";
+      return "$who academic results are: $summary.";
     }
 
-    // 👤 PROFILE
+    // ================= PROFILE =================
     if (intent == 'PROFILE') {
       return role == 'parent'
           ? "Child Name: ${student.name}, "
@@ -70,9 +90,9 @@ class BotEngine {
           "Class: ${student.studentClass}, Roll: ${student.roll}.";
     }
 
-    // ❓ UNKNOWN
+    // ❓ FALLBACK
     return role == 'parent'
-        ? "Sorry, I didn't understand. You can ask about your child's results, fees, or profile."
-        : "Sorry, I didn't understand. You can ask about results, fees, or profile.";
+        ? "Sorry, I didn't understand. You can ask about your child's fees, results, or profile."
+        : "Sorry, I didn't understand. You can ask about fees, dues, results, or profile.";
   }
 }

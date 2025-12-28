@@ -3,7 +3,7 @@ class Fee {
   final int studentId;
   final double amount;
   final String dueDate;
-  final String status;
+  final String status; // PAID | DUE
 
   Fee({
     this.id,
@@ -13,15 +13,13 @@ class Fee {
     required this.status,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'student_id': studentId,
-      'amount': amount,
-      'due_date': dueDate,
-      'status': status,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'student_id': studentId,
+    'amount': amount,
+    'due_date': dueDate,
+    'status': status,
+  };
 
   factory Fee.fromMap(Map<String, dynamic> map) {
     return Fee(

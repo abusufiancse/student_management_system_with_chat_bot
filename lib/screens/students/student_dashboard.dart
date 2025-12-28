@@ -7,6 +7,7 @@ import '../../models/student.dart';
 import '../../utils/grade_helper.dart';
 import '../../utils/session_manager.dart';
 import '../auth/login_screen.dart';
+import '../fee_overview_card.dart';
 
 class StudentDashboard extends StatefulWidget {
   final int userId;
@@ -83,6 +84,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            FeeOverviewCard(studentId: student!.id!),
 
             const SizedBox(height: 12),
 
