@@ -3,8 +3,9 @@ import '../chatbot/bot_engine.dart';
 
 class ChatScreen extends StatefulWidget {
   final int studentId;
+  final String role;
 
-  const ChatScreen({super.key, required this.studentId});
+  const ChatScreen({super.key, required this.studentId, required this.role,});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -24,7 +25,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
     controller.clear();
 
-    final reply = await BotEngine.reply(text, widget.studentId);
+    final reply = await BotEngine.reply(
+      question: text,
+      studentId: widget.studentId,
+      role: widget.role, // 'student' or 'parent'
+    );
 
     setState(() {
       messages.add({'role': 'bot', 'text': reply});

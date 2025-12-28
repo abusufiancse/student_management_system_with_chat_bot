@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:student_management_system/screens/result_screen.dart';
+
 import '../db/database_helper.dart';
 import '../models/student.dart';
 import 'chat_screen.dart';
@@ -23,19 +24,8 @@ class _StudentListScreenState extends State<StudentListScreen> {
 
   Future<void> loadStudents() async {
     final data = await DatabaseHelper.instance.getAllStudents();
+    if (!mounted) return;
     setState(() => students = data);
-  }
-
-  Future<void> addDummyStudent() async {
-    final student = Student(
-      name: 'Rahim',
-      studentClass: '10',
-      roll: '15',
-      guardian: 'Mr Karim',
-    );
-
-    await DatabaseHelper.instance.insertStudent(student);
-    loadStudents();
   }
 
   @override
@@ -43,12 +33,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Students'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: addDummyStudent,
-          )
-        ],
       ),
       body: students.isEmpty
           ? const Center(child: Text('No students found'))
@@ -57,16 +41,18 @@ class _StudentListScreenState extends State<StudentListScreen> {
         itemBuilder: (context, index) {
           final s = students[index];
           return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: ListTile(
-            title: Text(
-              s.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            margin:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: ListTile(
+              title: Text(
+                s.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle:
+              Text('Class ${s.studentClass} | Roll ${s.roll}'),
+              trailing: const Icon(Icons.more_vert),
+              onTap: () => _openStudentActions(context, s),
             ),
-            subtitle: Text('Class ${s.studentClass} | Roll ${s.roll}'),
-            trailing: const Icon(Icons.more_vert),
-            onTap: () => _openStudentActions(context, s),
-          ),
           );
         },
       ),
@@ -98,13 +84,18 @@ class _StudentListScreenState extends State<StudentListScreen> {
 
             Text(
               s.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
 
             const Divider(),
 
+            // ================= FEES =================
             ListTile(
-              leading: const Icon(Icons.receipt_long, color: Colors.green),
+              leading:
+              const Icon(Icons.receipt_long, color: Colors.green),
               title: const Text('View Fees'),
               onTap: () {
                 Navigator.pop(context);
@@ -117,6 +108,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
               },
             ),
 
+            // ================= RESULTS =================
             ListTile(
               leading: const Icon(Icons.bar_chart, color: Colors.blue),
               title: const Text('View Result'),
@@ -131,15 +123,21 @@ class _StudentListScreenState extends State<StudentListScreen> {
               },
             ),
 
+            // ================= AI BOT =================
             ListTile(
-              leading: const Icon(Icons.smart_toy, color: Colors.deepPurple),
+              leading:
+              const Icon(Icons.smart_toy, color: Colors.deepPurple),
               title: const Text('Ask AI Assistant'),
+              subtitle: const Text('Student-specific assistant'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ChatScreen(studentId: s.id!),
+                    builder: (_) => ChatScreen(
+                      studentId: s.id!,   // ✅ FIXED
+                      role: 'teacher',    // ✅ correct role
+                    ),
                   ),
                 );
               },
@@ -151,5 +149,4 @@ class _StudentListScreenState extends State<StudentListScreen> {
       },
     );
   }
-
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../chatbot/chat_screen.dart';
 import '../../db/database_helper.dart';
 import '../../models/result.dart';
 import '../../models/student.dart';
@@ -181,6 +182,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.smart_toy),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(studentId: student!.id!, role: 'student',),
+            ),
+          );
+        },
+      ),
+
     );
   }
 }

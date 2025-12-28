@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../chatbot/chat_screen.dart';
 import '../../db/database_helper.dart';
 import '../../models/result.dart';
 import '../../models/student.dart';
@@ -9,10 +10,12 @@ import '../auth/login_screen.dart';
 
 class ParentDashboard extends StatelessWidget {
   final Student student;
+  final String role;
 
   const ParentDashboard({
     super.key,
     required this.student,
+    required this.role,
   });
 
   Future<void> _exit(BuildContext context) async {
@@ -144,6 +147,21 @@ class ParentDashboard extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.smart_toy),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                studentId: student.id!,
+                role: 'parent',
+              )
+            ),
+          );
+        },
+      ),
+
     );
   }
 }

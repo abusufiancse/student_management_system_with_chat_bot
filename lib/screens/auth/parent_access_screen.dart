@@ -28,7 +28,7 @@ class _ParentAccessScreenState extends State<ParentAccessScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ParentDashboard(student: student,),
+        builder: (_) => ParentDashboard(student: student, role: 'parent',),
       ),
     );
   }
