@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:student_management_system/screens/auth/login_screen.dart';
 import 'db/database_helper.dart';
 import 'screens/student_list_screen.dart';
 
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: StudentListScreen(),
+      home: LoginScreen(),
     );
   }
 }

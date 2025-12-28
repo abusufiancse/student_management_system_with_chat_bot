@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import '../models/fee.dart';
 import '../models/result.dart';
 import '../models/student.dart';
+import '../models/user.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -23,9 +24,23 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE,
+        password TEXT,
+        role TEXT,
+        approved INTEGER
+      )
+    ''');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -111,6 +126,64 @@ class DatabaseHelper {
     return result.map((e) => Result.fromMap(e)).toList();
   }
 
+  Future<User?> login(String email, String password) async {
+    final db = await database;
+    final res = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+
+    if (res.isNotEmpty) {
+      return User(
+        id: res.first['id'] as int,
+        email: res.first['email'] as String,
+        password: res.first['password'] as String,
+        role: res.first['role'] as String,
+        approved: res.first['approved'] as int,
+      );
+    }
+    return null;
+  }
+
+// REGISTER USER (Student / Parent)
+  Future<int> registerUser(User user) async {
+    final db = await database;
+    return await db.insert('users', user.toMap());
+  }
+
+// LOGIN USER
+  Future<User?> loginUser(String email, String password) async {
+    final db = await database;
+
+    final res = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+
+    if (res.isNotEmpty) {
+      return User.fromMap(res.first);
+    }
+    return null;
+  }
+// GET users by role
+  Future<List<User>> getAllUsersByRole(String role) async {
+    final db = await database;
+    final res = await db.query('users', where: 'role = ?', whereArgs: [role]);
+    return res.map((e) => User.fromMap(e)).toList();
+  }
+
+// UPDATE approval
+  Future<void> updateUserApproval(int userId, int approved) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {'approved': approved},
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
 
 
 }
