@@ -3,6 +3,7 @@ import 'package:student_management_system/screens/auth/parent_access_screen.dart
 import 'package:student_management_system/screens/auth/student_register_screen.dart';
 import '../../db/database_helper.dart';
 import '../../utils/session_manager.dart';
+import '../parents/parent_dashboard.dart';
 import '../teacher/teacher_dashboard.dart';
 import '../students/student_dashboard.dart';
 
@@ -99,17 +100,28 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
 
+    // 🔎 Check approved student
+    final student =
+    await DatabaseHelper.instance.getApprovedStudentByRoll(roll);
+
+    if (student == null) {
+      _snack('No approved student found with this roll');
+      return;
+    }
+
     // ✅ SAVE SESSION
     await SessionManager.saveParentSession(roll);
 
     if (!mounted) return;
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => ParentAccessScreen(initialRoll: roll),
+        builder: (_) => ParentDashboard(student: student, role: 'parent',),
       ),
     );
   }
+
+
 
   void _snack(String msg) {
     ScaffoldMessenger.of(context)
@@ -223,20 +235,27 @@ class _LoginScreenState extends State<LoginScreen>
           TextField(
             controller: rollCtrl,
             decoration: const InputDecoration(
-              labelText: 'Student Roll / Index Number',
+              labelText: 'Student Roll: ',
+              prefixIcon: Icon(Icons.badge),
             ),
+            keyboardType: TextInputType.number,
           ),
+
           const SizedBox(height: 20),
+
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: parentAccess,
-              child: const Text('View Child Details'),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.visibility),
+              label: const Text('View Child Dashboard'),
+              onPressed: parentAccess, // ✅ ONLY HERE
             ),
           ),
-          const SizedBox(height: 10),
+
+          const SizedBox(height: 12),
+
           const Text(
-            'Parents can access student details\nusing roll/index number',
+            'Parents can access student information\nusing the approved roll number',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
@@ -244,5 +263,6 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
+
 }
 

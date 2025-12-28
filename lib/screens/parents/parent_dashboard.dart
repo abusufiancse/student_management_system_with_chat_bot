@@ -6,6 +6,7 @@ import '../../models/result.dart';
 import '../../models/student.dart';
 import '../../utils/grade_helper.dart';
 import '../../utils/session_manager.dart';
+import '../../widgets/due_notification_card.dart';
 import '../auth/login_screen.dart';
 import '../fee_overview_card.dart';
 
@@ -36,6 +37,7 @@ class ParentDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Parent Dashboard'),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.exit_to_app),
@@ -66,6 +68,8 @@ class ParentDashboard extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            DueNotificationCard(studentId: student!.id!),
             const SizedBox(height: 12),
             FeeOverviewCard(studentId: student.id!),
 
