@@ -5,6 +5,7 @@ import '../../chatbot/chat_screen.dart';
 import '../../db/database_helper.dart';
 import '../../models/result.dart';
 import '../../models/student.dart';
+import '../../utils/ResultPerformanceChart.dart';
 import '../../utils/grade_helper.dart';
 import '../../utils/session_manager.dart';
 import '../../widgets/due_notification_card.dart';
@@ -127,12 +128,12 @@ class ParentDashboard extends StatelessWidget {
             const SizedBox(height: 8),
 
             // ================= RESULTS (GRID) =================
+            // ================= RESULTS (CHART + GRID) =================
             FutureBuilder<List<Result>>(
               future: DatabaseHelper.instance
                   .getResultsByStudent(student.id!),
               builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Padding(
                     padding: EdgeInsets.all(24),
                     child: Center(child: CircularProgressIndicator()),
@@ -151,102 +152,109 @@ class ParentDashboard extends StatelessWidget {
 
                 final results = snapshot.data!;
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: results.length,
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.98,
-                  ),
-                  itemBuilder: (context, index) {
-                    final r = results[index];
-                    final color =
-                    GradeHelper.gradeColor(r.grade);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ================= PERFORMANCE CHART =================
+                    ResultPerformanceChart(results: results),
 
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF6F6F6),
-                        borderRadius: BorderRadius.circular(18),
+                    const SizedBox(height: 20),
+
+                    // ================= RESULT GRID =================
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: results.length,
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.98,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // SUBJECT
-                          Text(
-                            r.subject,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      itemBuilder: (context, index) {
+                        final r = results[index];
+                        final color = GradeHelper.gradeColor(r.grade);
+
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF6F6F6),
+                            borderRadius: BorderRadius.circular(18),
                           ),
-
-                          const Spacer(),
-
-                          // MARKS
-                          Text(
-                            'Marks',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          Text(
-                            r.marks.toString(),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // GRADE CHIP
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${r.grade} • ${GradeHelper.remark(r.grade)}',
-                              style: TextStyle(
-                                color: color,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                r.subject,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ),
 
-                          // COMMENT (optional)
-                          if (r.comment != null &&
-                              r.comment!.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              r.comment!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black54,
+                              const Spacer(),
+
+                              Text(
+                                'Marks',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  },
+                              Text(
+                                r.marks.toString(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: color.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${r.grade} • ${GradeHelper.remark(r.grade)}',
+                                  style: TextStyle(
+                                    color: color,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+
+                              if (r.comment != null &&
+                                  r.comment!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  r.comment!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 );
               },
             ),
+
           ],
         ),
       ),

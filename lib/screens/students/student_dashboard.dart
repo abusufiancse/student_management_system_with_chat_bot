@@ -3,12 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../chatbot/chat_screen.dart';
 import '../../db/database_helper.dart';
+import '../../models/homework.dart';
 import '../../models/result.dart';
 import '../../models/student.dart';
+import '../../utils/ResultPerformanceChart.dart';
 import '../../utils/grade_helper.dart';
 import '../../utils/session_manager.dart';
 import '../auth/login_screen.dart';
-import '../fee_overview_card.dart';
 
 class StudentDashboard extends StatefulWidget {
   final int userId;
@@ -70,6 +71,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
             onPressed: _logout,
           ),
         ],
+        automaticallyImplyLeading: true,
       ),
 
       // ================= BODY =================
@@ -121,35 +123,59 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // ================= FEE OVERVIEW =================
-            FeeOverviewCard(studentId: student!.id!),
+            // ================= HOMEWORK =================
+            const Text(
+              'Today\'s Homework',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+            FutureBuilder<List<Homework>>(
+              future: DatabaseHelper.instance
+                  .getHomeworkByDate(DateTime.now().toString().substring(0, 10)),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text('No homework today',style: TextStyle(color: Colors.grey.shade700),),
+                  );
+                }
+
+                return Column(
+                  children: snapshot.data!.map((h) {
+                    return ListTile(
+                      title: Text(h.title),
+                      subtitle: Text(h.description),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+
 
             const SizedBox(height: 24),
 
+            // ================= RESULTS + GRAPH =================
             const Text(
               'Academic Results',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
 
-// ================= RESULTS =================
+            const SizedBox(height: 12),
+
             FutureBuilder<List<Result>>(
               future: DatabaseHelper.instance
                   .getResultsByStudent(student!.id!),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (!snapshot.hasData) {
                   return const Padding(
                     padding: EdgeInsets.all(24),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                if (snapshot.data!.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Text(
@@ -161,100 +187,83 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
                 final results = snapshot.data!;
 
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: results.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,          // 🔥 GRID
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.98,      // iOS card ratio
-                  ),
-                  itemBuilder: (context, index) {
-                    final r = results[index];
-                    final color = GradeHelper.gradeColor(r.grade);
+                return Column(
+                  children: [
+                    // 📊 PERFORMANCE GRAPH
+                    ResultPerformanceChart(results: results),
 
-                    return Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF6F6F6),
-                        borderRadius: BorderRadius.circular(18),
+                    const SizedBox(height: 12),
+
+                    // 🧩 GRID VIEW
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: results.length,
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.98,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // SUBJECT
-                          Text(
-                            r.subject,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      itemBuilder: (context, index) {
+                        final r = results[index];
+                        final color =
+                        GradeHelper.gradeColor(r.grade);
+
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF6F6F6),
+                            borderRadius: BorderRadius.circular(18),
                           ),
-
-                          const Spacer(),
-
-                          // MARKS
-                          Text(
-                            'Marks',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          Text(
-                            r.marks.toString(),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // GRADE CHIP
-                          Container(
-                            padding:
-                            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${r.grade} • ${GradeHelper.remark(r.grade)}',
-                              style: TextStyle(
-                                color: color,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                r.subject,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ),
-
-                          // COMMENT (optional)
-                          if (r.comment != null && r.comment!.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              r.comment!,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black54,
+                              const Spacer(),
+                              Text(
+                                r.marks.toString(),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  },
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: color.withOpacity(0.12),
+                                  borderRadius:
+                                  BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${r.grade} • ${GradeHelper.remark(r.grade)}',
+                                  style: TextStyle(
+                                    color: color,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 );
               },
             ),
-
           ],
         ),
       ),
@@ -262,8 +271,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
       // ================= AI BUTTON =================
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        elevation: 3,
         child: const Icon(Icons.smart_toy),
         onPressed: () {
           Navigator.push(
