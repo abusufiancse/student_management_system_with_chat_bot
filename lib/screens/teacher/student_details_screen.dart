@@ -18,6 +18,7 @@ class StudentDetailsScreen extends StatelessWidget {
     required this.student,
     required this.user,
   });
+
   Future<void> _addPayment(BuildContext context) async {
     final amountCtrl = TextEditingController();
     final dueDateCtrl = TextEditingController();
@@ -45,7 +46,13 @@ class StudentDetailsScreen extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Add Payment'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Add Payment',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         content: Form(
           key: formKey,
           child: Column(
@@ -55,21 +62,35 @@ class StudentDetailsScreen extends StatelessWidget {
               TextFormField(
                 controller: amountCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Amount',
                   prefixText: '৳ ',
+                  filled: true,
+                  fillColor: const Color(0xFFF1F1F1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
                 validator: (v) =>
                 v == null || v.isEmpty ? 'Enter amount' : null,
               ),
 
-              // ================= DATE PICKER =================
+              const SizedBox(height: 12),
+
+              // ================= DATE =================
               TextFormField(
                 controller: dueDateCtrl,
                 readOnly: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Due Date',
-                  suffixIcon: Icon(Icons.calendar_today),
+                  filled: true,
+                  fillColor: const Color(0xFFF1F1F1),
+                  suffixIcon: const Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
                 onTap: pickDate,
                 validator: (_) =>
@@ -81,7 +102,15 @@ class StudentDetailsScreen extends StatelessWidget {
               // ================= STATUS =================
               DropdownButtonFormField<String>(
                 value: status,
-                decoration: const InputDecoration(labelText: 'Status'),
+                decoration: InputDecoration(
+                  labelText: 'Status',
+                  filled: true,
+                  fillColor: const Color(0xFFF1F1F1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
                 items: const [
                   DropdownMenuItem(value: 'PAID', child: Text('PAID')),
                   DropdownMenuItem(value: 'DUE', child: Text('DUE')),
@@ -91,10 +120,15 @@ class StudentDetailsScreen extends StatelessWidget {
             ],
           ),
         ),
+        actionsPadding:
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -102,6 +136,13 @@ class StudentDetailsScreen extends StatelessWidget {
                 Navigator.pop(context, true);
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
             child: const Text('Save'),
           ),
         ],
@@ -118,7 +159,6 @@ class StudentDetailsScreen extends StatelessWidget {
         ),
       );
 
-      // 🔄 Refresh screen
       Navigator.pop(context);
       Navigator.pushReplacement(
         context,
@@ -135,106 +175,171 @@ class StudentDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+
+      // ================= APP BAR =================
       appBar: AppBar(
-        title: const Text('Student Details'),
-        automaticallyImplyLeading: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: const Text(
+          'Student Details',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
       ),
+
+      // ================= BODY =================
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ================= PROFILE =================
-            Card(
-              child: ListTile(
-                title: Text(
-                  student.name,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Class: ${student.studentClass}'),
-                    Text('Roll: ${student.roll}'),
-                    Text('Guardian: ${student.guardian}'),
-                    Text(
-                      'Status: ${user.approved == 1 ? "Approved" : "Pending"}',
-                      style: TextStyle(
-                        color: user.approved == 1
-                            ? Colors.green
-                            : Colors.orange,
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F6F6),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: Colors.black,
+                    child: Text(
+                      student.name.substring(0, 1).toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        student.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Class ${student.studentClass} • Roll ${student.roll}',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: user.approved == 1
+                              ? Colors.green.withOpacity(0.12)
+                              : Colors.orange.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          user.approved == 1 ? 'Approved' : 'Pending',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: user.approved == 1
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // ================= PAYMENT SUMMARY =================
             const Text(
               'Payment Summary',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 8),
 
             FutureBuilder<Map<String, dynamic>>(
-              future: DatabaseHelper.instance
-                  .getFeeSummary(student.id!),
+              future:
+              DatabaseHelper.instance.getFeeSummary(student.id!),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Padding(
-                    padding: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(16),
                     child: CircularProgressIndicator(),
                   );
                 }
 
                 final f = snapshot.data!;
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        _row('Total', '৳${f['total']}'),
-                        _row('Paid', '৳${f['paid']}', Colors.green),
-                        _row('Due', '৳${f['due']}', Colors.red),
-                        if (f['lastDueDate'] != null)
-                          _row('Last Due Date',
-                              f['lastDueDate'], Colors.orange),
-                      ],
-                    ),
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF6F6F6),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Column(
+                    children: [
+                      _row('Total', '৳${f['total']}'),
+                      _row('Paid', '৳${f['paid']}', Colors.green),
+                      _row('Due', '৳${f['due']}', Colors.red),
+                      if (f['lastDueDate'] != null)
+                        _row(
+                          'Last Due Date',
+                          f['lastDueDate'],
+                          Colors.orange,
+                        ),
+                    ],
                   ),
                 );
               },
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
-            // ================= ADD PAYMENT =================
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Add Payment'),
-              onPressed: () => _addPayment(context),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Add Payment'),
+                onPressed: () => _addPayment(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
             ),
 
-            const Divider(height: 32),
+            const SizedBox(height: 28),
 
             // ================= RESULTS =================
             const Text(
               'Academic Results',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 8),
 
             FutureBuilder<List<Result>>(
               future: DatabaseHelper.instance
                   .getResultsByStudent(student.id!),
               builder: (context, snapshot) {
-                if (!snapshot.hasData ||
-                    snapshot.data!.isEmpty) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Padding(
                     padding: EdgeInsets.all(8),
-                    child: Text('No results added yet'),
+                    child: Text(
+                      'No results added yet',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   );
                 }
 
@@ -242,25 +347,57 @@ class StudentDetailsScreen extends StatelessWidget {
                 return Column(
                   children: results.map((r) {
                     final color = GradeHelper.gradeColor(r.grade);
-                    return Card(
-                      child: ListTile(
-                        title: Text(r.subject),
-                        subtitle: Text(
-                          'Marks: ${r.marks} | Grade: ${r.grade}',
-                          style: TextStyle(color: color),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    EditResultScreen(result: r),
-                              ),
-                            );
-                          },
-                        ),
+                    return Container(
+                      margin:
+                      const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6F6F6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  r.subject,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Marks: ${r.marks}',
+                                  style: const TextStyle(
+                                      color: Colors.black54),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Grade: ${r.grade}',
+                                  style: TextStyle(
+                                    color: color,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      EditResultScreen(result: r),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     );
                   }).toList(),
@@ -268,21 +405,31 @@ class StudentDetailsScreen extends StatelessWidget {
               },
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
-            ElevatedButton.icon(
-              icon: const Icon(Icons.bar_chart),
-              label: const Text('Add Result'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TeacherResultEntryScreen(
-                      studentId: student.id!,
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.bar_chart),
+                label: const Text('Add Result'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TeacherResultEntryScreen(
+                        studentId: student.id!,
+                      ),
                     ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ],
         ),

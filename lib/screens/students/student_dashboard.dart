@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../chatbot/chat_screen.dart';
 import '../../db/database_helper.dart';
@@ -34,9 +35,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 
   Future<void> _logout() async {
-    // ✅ clear saved session
     await SessionManager.logout();
-
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
@@ -54,82 +53,105 @@ class _StudentDashboardState extends State<StudentDashboard> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
+
+      // ================= APP BAR =================
       appBar: AppBar(
-        title: const Text('Student Dashboard'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
-          )
+          ),
         ],
       ),
+
+      // ================= BODY =================
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ================= STUDENT INFO =================
-            Card(
-              child: ListTile(
-                title: Text(
-                  student!.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Class: ${student!.studentClass}'),
-                    Text('Roll: ${student!.roll}'),
-                  ],
-                ),
+            // ================= PROFILE CARD =================
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F6F6),
+                borderRadius: BorderRadius.circular(18),
               ),
-            ),
-            const SizedBox(height: 12),
-            FeeOverviewCard(studentId: student!.id!),
-
-            const SizedBox(height: 12),
-
-            // ================= ROLL HIGHLIGHT =================
-            Card(
-              color: Colors.blue.shade50,
-              child: ListTile(
-                title: const Text('Your Roll / Index Number'),
-                subtitle: Text(
-                  student!.roll,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: Colors.black,
+                    child: Text(
+                      student!.name.substring(0, 1).toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        student!.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Class ${student!.studentClass} • Roll ${student!.roll}',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 16),
 
+            // ================= FEE OVERVIEW =================
+            FeeOverviewCard(studentId: student!.id!),
+
+            const SizedBox(height: 24),
+
             const Text(
-              'My Academic Results',
+              'Academic Results',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
 
-            // ================= RESULTS =================
+// ================= RESULTS =================
             FutureBuilder<List<Result>>(
               future: DatabaseHelper.instance
                   .getResultsByStudent(student!.id!),
               builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(
-                      child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
                 }
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Padding(
-                    padding: EdgeInsets.all(12),
+                    padding: EdgeInsets.symmetric(vertical: 24),
                     child: Text(
                       'No results published yet',
                       style: TextStyle(color: Colors.grey),
@@ -139,64 +161,122 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
                 final results = snapshot.data!;
 
-                return Column(
-                  children: results.map((r) {
-                    final color =
-                    GradeHelper.gradeColor(r.grade);
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: results.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,          // 🔥 GRID
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.98,      // iOS card ratio
+                  ),
+                  itemBuilder: (context, index) {
+                    final r = results[index];
+                    final color = GradeHelper.gradeColor(r.grade);
 
-                    return Card(
-                      margin:
-                      const EdgeInsets.symmetric(vertical: 6),
-                      child: ListTile(
-                        title: Text(
-                          r.subject,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                          children: [
-                            Text('Marks: ${r.marks}'),
-                            Text(
-                              'Grade: ${r.grade} (${GradeHelper.remark(r.grade)})',
-                              style: TextStyle(color: color),
+                    return Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF6F6F6),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // SUBJECT
+                          Text(
+                            r.subject,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
                             ),
-                            if (r.comment != null &&
-                                r.comment!.isNotEmpty)
-                              Padding(
-                                padding:
-                                const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Teacher Comment: ${r.comment}',
-                                  style: const TextStyle(
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
+                          ),
+
+                          const Spacer(),
+
+                          // MARKS
+                          Text(
+                            'Marks',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          Text(
+                            r.marks.toString(),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // GRADE CHIP
+                          Container(
+                            padding:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${r.grade} • ${GradeHelper.remark(r.grade)}',
+                              style: TextStyle(
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
                               ),
+                            ),
+                          ),
+
+                          // COMMENT (optional)
+                          if (r.comment != null && r.comment!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              r.comment!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black54,
+                              ),
+                            ),
                           ],
-                        ),
+                        ],
                       ),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
+
           ],
         ),
       ),
+
+      // ================= AI BUTTON =================
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 3,
         child: const Icon(Icons.smart_toy),
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => ChatScreen(studentId: student!.id!, role: 'student',),
+              builder: (_) => ChatScreen(
+                studentId: student!.id!,
+                role: 'student',
+              ),
             ),
           );
         },
       ),
-
     );
   }
 }

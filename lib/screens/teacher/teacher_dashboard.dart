@@ -75,7 +75,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     return DatabaseHelper.instance.getStudentByUserId(userId);
   }
 
-
   // ================= STUDENT TILE =================
   Widget studentTile(User u) {
     return FutureBuilder<Student?>(
@@ -83,48 +82,86 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       builder: (context, snapshot) {
         final s = snapshot.data;
 
-        return Card(
-          margin:
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: ListTile(
-            onTap: () {
-              if (s != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => StudentDetailsScreen(
-                      student: s,
-                      user: u,
-                    ),
-                  ),
-                );
-              }
-            },
-            title: Text(
-              s?.name ?? u.email,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (s != null)
-                  Text('Class: ${s.studentClass} | Roll: ${s.roll}'),
-                Text(
-                  u.approved == 1
-                      ? 'Approved'
-                      : 'Pending Approval',
-                  style: TextStyle(
-                    color: u.approved == 1
-                        ? Colors.green
-                        : Colors.orange,
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF6F6F6),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              // SWITCH
+              Switch(
+                value: u.approved == 1,
+                onChanged: (_) => toggleApproval(u),
+                activeColor: Colors.black,
+              ),
+
+              const SizedBox(width: 12),
+
+              // INFO
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    if (s != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StudentDetailsScreen(
+                            student: s,
+                            user: u,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s?.name ?? u.email,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      if (s != null)
+                        Text(
+                          'Class ${s.studentClass} • Roll ${s.roll}',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      const SizedBox(height: 6),
+
+                      // STATUS CHIP
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: u.approved == 1
+                              ? Colors.green.withOpacity(0.12)
+                              : Colors.orange.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          u.approved == 1
+                              ? 'Approved'
+                              : 'Pending Approval',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: u.approved == 1
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            leading: Switch(
-              value: u.approved == 1,
-              onChanged: (_) => toggleApproval(u),
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -135,14 +172,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+
+      // ================= APP BAR =================
       appBar: AppBar(
-        title: const Text('Teacher Dashboard'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Approved'),
-            Tab(text: 'Pending'),
-          ],
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: const Text(
+          'Teacher Dashboard',
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
@@ -150,32 +189,79 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => const LoginScreen()),
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
                     (_) => false,
               );
             },
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _tabController,
+
+      // ================= BODY =================
+      body: Column(
         children: [
-          approvedUsers.isEmpty
-              ? const Center(
-            child: Text('No approved students'),
-          )
-              : ListView(
-            children:
-            approvedUsers.map(studentTile).toList(),
+          // ================= TAB BAR =================
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F1F1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.transparent,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.black,
+              tabs: const [
+                Padding(
+                  padding:
+                  EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+                  child: Text('Approved'),
+                ),
+                Padding(
+                  padding:
+                  EdgeInsets.symmetric(horizontal: 30, vertical: 8),
+                  child: Text('Pending'),
+                ),
+              ],
+            ),
           ),
-          pendingUsers.isEmpty
-              ? const Center(
-            child: Text('No pending students'),
-          )
-              : ListView(
-            children:
-            pendingUsers.map(studentTile).toList(),
+
+          // ================= TAB VIEW =================
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                approvedUsers.isEmpty
+                    ? const Center(
+                  child: Text(
+                    'No approved students',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+                    : ListView(
+                  children:
+                  approvedUsers.map(studentTile).toList(),
+                ),
+                pendingUsers.isEmpty
+                    ? const Center(
+                  child: Text(
+                    'No pending students',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+                    : ListView(
+                  children:
+                  pendingUsers.map(studentTile).toList(),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -45,34 +45,103 @@ class _EditResultScreenState extends State<EditResultScreen> {
     Navigator.pop(context, true);
   }
 
+  // ================= INPUT STYLE =================
+  InputDecoration _input(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: const Color(0xFFF1F1F1),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Result')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: Colors.white,
+
+      // ================= APP BAR =================
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: const Text(
+          'Edit Result',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+
+      // ================= BODY =================
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.result.subject,
-              style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold),
+            // ================= SUBJECT HEADER =================
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                widget.result.subject,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
+
+            const SizedBox(height: 20),
+
+            // ================= MARKS =================
             TextField(
               controller: marksCtrl,
-              decoration: const InputDecoration(labelText: 'Marks'),
               keyboardType: TextInputType.number,
+              decoration: _input('Marks', Icons.score),
             ),
+
+            const SizedBox(height: 14),
+
+            // ================= COMMENT =================
             TextField(
               controller: commentCtrl,
+              maxLines: 2,
               decoration:
-              const InputDecoration(labelText: 'Teacher Comment'),
+              _input('Teacher Comment', Icons.comment),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: update,
-              child: const Text('Update Result'),
-            )
+
+            const SizedBox(height: 28),
+
+            // ================= UPDATE BUTTON =================
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.update),
+                label: const Text(
+                  'Update Result',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onPressed: update,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -17,13 +17,14 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
   final nameCtrl = TextEditingController();
   final classCtrl = TextEditingController();
   final parentCtrl = TextEditingController();
-  final ageCtrl = TextEditingController(); // optional
+  final ageCtrl = TextEditingController();
+
+  bool _showPassword = false;
 
   Future<void> register() async {
     try {
       final db = DatabaseHelper.instance;
 
-      // 1️⃣ Create user (NOT approved)
       final user = User(
         email: emailCtrl.text.trim(),
         password: passCtrl.text.trim(),
@@ -32,11 +33,8 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
       );
 
       final userId = await db.registerUser(user);
-
-      // 2️⃣ Auto roll
       final autoRoll = await db.getNextStudentRoll();
 
-      // 3️⃣ Create student profile
       final student = Student(
         userId: userId,
         name: nameCtrl.text.trim(),
@@ -59,57 +57,136 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
 
       Navigator.pop(context);
     } catch (e, stack) {
-      // 🔴 TERMINAL LOG
       debugPrint('❌ STUDENT REGISTER ERROR: $e');
       debugPrint('📌 STACK TRACE:\n$stack');
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration failed. Check logs.'),
-        ),
+        const SnackBar(content: Text('Registration failed. Check logs.')),
       );
     }
+  }
+
+  // ================= INPUT STYLE =================
+  InputDecoration _input(String label, {Widget? suffix}) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: const Color(0xFFF1F1F1),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+      suffixIcon: suffix,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Student Registration')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Student Registration',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Create Student Account',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Fill in the details below',
+              style: TextStyle(color: Colors.grey),
+            ),
+
+            const SizedBox(height: 24),
+
             TextField(
               controller: emailCtrl,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: _input('Email'),
+              keyboardType: TextInputType.emailAddress,
             ),
+            const SizedBox(height: 14),
+
             TextField(
               controller: passCtrl,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              obscureText: !_showPassword,
+              decoration: _input(
+                'Password',
+                suffix: IconButton(
+                  icon: Icon(
+                    _showPassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() => _showPassword = !_showPassword);
+                  },
+                ),
+              ),
             ),
+            const SizedBox(height: 14),
+
             TextField(
               controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Student Name'),
+              decoration: _input('Student Name'),
             ),
+            const SizedBox(height: 14),
+
             TextField(
               controller: classCtrl,
-              decoration: const InputDecoration(labelText: 'Class'),
+              decoration: _input('Class'),
             ),
+            const SizedBox(height: 14),
+
             TextField(
               controller: parentCtrl,
-              decoration: const InputDecoration(labelText: 'Parent Name'),
+              decoration: _input('Parent Name'),
             ),
+            const SizedBox(height: 14),
+
             TextField(
               controller: ageCtrl,
-              decoration: const InputDecoration(labelText: 'Age'),
+              decoration: _input('Age'),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: register,
-              child: const Text('Register'),
+
+            const SizedBox(height: 28),
+
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: register,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'Register',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

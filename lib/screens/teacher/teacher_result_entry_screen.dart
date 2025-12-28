@@ -45,7 +45,6 @@ class _TeacherResultEntryScreenState extends State<TeacherResultEntryScreen> {
     if (!mounted) return;
     _snack('Result saved successfully');
 
-    // Reset form
     subjectCtrl.clear();
     marksCtrl.clear();
     commentCtrl.clear();
@@ -83,48 +82,67 @@ class _TeacherResultEntryScreenState extends State<TeacherResultEntryScreen> {
     });
   }
 
+  // ================= INPUT DECOR =================
+  InputDecoration _input(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: const Color(0xFFF1F1F1),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+
+      // ================= APP BAR =================
       appBar: AppBar(
-        title: const Text('Enter Student Result'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        title: const Text(
+          'Enter Student Result',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
       ),
+
+      // ================= BODY =================
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ================= SUBJECT =================
             TextField(
               controller: subjectCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Subject',
-                prefixIcon: Icon(Icons.book),
-              ),
+              decoration: _input('Subject', Icons.book),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             // ================= MARKS =================
             TextField(
               controller: marksCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Marks',
-                prefixIcon: Icon(Icons.score),
-              ),
+              decoration: _input('Marks', Icons.score),
               keyboardType: TextInputType.number,
               onChanged: onMarksChanged,
             ),
 
-            // ================= LIVE GRADE PREVIEW =================
+            // ================= LIVE GRADE =================
             if (grade != null)
               Container(
                 margin: const EdgeInsets.only(top: 16),
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: gradeColor!.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: gradeColor!),
+                  color: gradeColor!.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: gradeColor!, width: 1),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -149,27 +167,39 @@ class _TeacherResultEntryScreenState extends State<TeacherResultEntryScreen> {
                 ),
               ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
-            // ================= TEACHER COMMENT =================
+            // ================= COMMENT =================
             TextField(
               controller: commentCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Teacher Comment (optional)',
-                prefixIcon: Icon(Icons.comment),
-              ),
+              decoration:
+              _input('Teacher Comment (optional)', Icons.comment),
               maxLines: 2,
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
-            // ================= SAVE BUTTON =================
+            // ================= SAVE =================
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.save),
-                label: const Text('Save Result'),
+                label: const Text(
+                  'Save Result',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
                 onPressed: saveResult,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
               ),
             ),
           ],
