@@ -101,6 +101,20 @@ class DatabaseHelper {
   ''');
   }
 
+  Future<void> updateResult(Result result) async {
+    final db = await database;
+    await db.update(
+      'results',
+      {
+        'marks': result.marks,
+        'grade': result.grade,
+        'comment': result.comment,
+      },
+      where: 'id = ?',
+      whereArgs: [result.id],
+    );
+  }
+
   Future<int> insertStudent(Student student) async {
     final db = await instance.database;
 
