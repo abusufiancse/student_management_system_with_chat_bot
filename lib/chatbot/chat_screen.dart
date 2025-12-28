@@ -50,64 +50,106 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF6F6F6),
       appBar: AppBar(
         title: const Text('AI Assistant'),
+        centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // ================= CHAT AREA =================
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: messages.length,
-              itemBuilder: (context, i) {
-                final m = messages[i];
-                final isUser = m['role'] == 'user';
-
-                return Align(
-                  alignment:
-                  isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUser
-                          ? Colors.blue.shade100
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(m['text']!),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // ================= INPUT =================
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: inputCtrl,
-                    decoration: const InputDecoration(
-                      hintText:
-                      'Ask about results, fees, profile, etc...',
-                    ),
-                    onSubmitted: (_) => send(),
-                  ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ================= CHAT AREA =================
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: send,
-                ),
-              ],
+                itemCount: messages.length,
+                itemBuilder: (context, i) {
+                  final m = messages[i];
+                  final isUser = m['role'] == 'user';
+
+                  return Align(
+                    alignment: isUser
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      constraints: const BoxConstraints(maxWidth: 280),
+                      decoration: BoxDecoration(
+                        color: isUser
+                            ? Colors.black
+                            : Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(16),
+                          topRight: const Radius.circular(16),
+                          bottomLeft: Radius.circular(isUser ? 16 : 4),
+                          bottomRight: Radius.circular(isUser ? 4 : 16),
+                        ),
+                      ),
+                      child: Text(
+                        m['text']!,
+                        style: TextStyle(
+                          color:
+                          isUser ? Colors.white : Colors.black87,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+
+            // ================= INPUT BAR =================
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),
+              child: Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: inputCtrl,
+                        decoration: const InputDecoration(
+                          hintText:
+                          'Ask about results, fees, profile…',
+                          border: InputBorder.none,
+                        ),
+                        onSubmitted: (_) => send(),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.black,
+                      ),
+                      onPressed: send,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
