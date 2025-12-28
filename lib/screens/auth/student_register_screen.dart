@@ -16,12 +16,13 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
   final passCtrl = TextEditingController();
   final nameCtrl = TextEditingController();
   final classCtrl = TextEditingController();
-  final rollCtrl = TextEditingController();
   final parentCtrl = TextEditingController();
-  final ageCtrl = TextEditingController();
+  final ageCtrl = TextEditingController(); // optional
 
-  void register() async {
+  Future<void> register() async {
     try {
+      final db = DatabaseHelper.instance;
+
       // 1️⃣ Create user (NOT approved)
       final user = User(
         email: emailCtrl.text.trim(),
@@ -30,31 +31,44 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
         approved: 0,
       );
 
-      final userId =
-      await DatabaseHelper.instance.registerUser(user);
+      final userId = await db.registerUser(user);
 
-      // 2️⃣ Create student profile
+      // 2️⃣ Auto roll
+      final autoRoll = await db.getNextStudentRoll();
+
+      // 3️⃣ Create student profile
       final student = Student(
+        userId: userId,
         name: nameCtrl.text.trim(),
         studentClass: classCtrl.text.trim(),
-        roll: rollCtrl.text.trim(),
+        roll: autoRoll,
         guardian: parentCtrl.text.trim(),
       );
 
-      await DatabaseHelper.instance.insertStudent(student);
+      await db.insertStudent(student);
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registered! Wait for teacher approval'),
+        SnackBar(
+          content: Text(
+            'Registered successfully!\nAssigned Roll: $autoRoll\nWait for teacher approval',
+          ),
         ),
       );
 
       Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+    } catch (e, stack) {
+      // 🔴 TERMINAL LOG
+      debugPrint('❌ STUDENT REGISTER ERROR: $e');
+      debugPrint('📌 STACK TRACE:\n$stack');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration failed. Check logs.'),
+        ),
+      );
     }
   }
 
@@ -66,15 +80,37 @@ class _StudentRegisterScreenState extends State<StudentRegisterScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email')),
-            TextField(controller: passCtrl, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Student Name')),
-            TextField(controller: classCtrl, decoration: const InputDecoration(labelText: 'Class')),
-            TextField(controller: rollCtrl, decoration: const InputDecoration(labelText: 'Roll')),
-            TextField(controller: parentCtrl, decoration: const InputDecoration(labelText: 'Parent Name')),
-            TextField(controller: ageCtrl, decoration: const InputDecoration(labelText: 'Age'), keyboardType: TextInputType.number),
+            TextField(
+              controller: emailCtrl,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passCtrl,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Student Name'),
+            ),
+            TextField(
+              controller: classCtrl,
+              decoration: const InputDecoration(labelText: 'Class'),
+            ),
+            TextField(
+              controller: parentCtrl,
+              decoration: const InputDecoration(labelText: 'Parent Name'),
+            ),
+            TextField(
+              controller: ageCtrl,
+              decoration: const InputDecoration(labelText: 'Age'),
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: register, child: const Text('Register')),
+            ElevatedButton(
+              onPressed: register,
+              child: const Text('Register'),
+            ),
           ],
         ),
       ),

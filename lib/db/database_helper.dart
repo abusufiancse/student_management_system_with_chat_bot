@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -24,10 +25,11 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3, // ⬅️ increase version
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
+
   }
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
@@ -41,17 +43,27 @@ class DatabaseHelper {
       )
     ''');
     }
+
+    if (oldVersion < 3) {
+      // 🔥 ADD user_id column to students table
+      await db.execute(
+        'ALTER TABLE students ADD COLUMN user_id INTEGER',
+      );
+    }
   }
+
 
   Future<void> _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
         name TEXT,
         class TEXT,
-        roll TEXT,
+        roll TEXT UNIQUE,
         guardian TEXT
       )
+
     ''');
 
     await db.execute('''
@@ -75,11 +87,14 @@ class DatabaseHelper {
     ''');
 
   }
-  // INSERT student
   Future<int> insertStudent(Student student) async {
     final db = await instance.database;
+
+    debugPrint('🟢 INSERT STUDENT: ${student.toMap()}');
+
     return await db.insert('students', student.toMap());
   }
+
 
 // FETCH all students
   Future<List<Student>> getAllStudents() async {
@@ -183,6 +198,68 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [userId],
     );
+  }
+
+// UPDATE student profile
+  Future<void> updateStudent(Student student) async {
+    final db = await database;
+    await db.update(
+      'students',
+      student.toMap(),
+      where: 'id = ?',
+      whereArgs: [student.id],
+    );
+  }
+
+// DELETE student + user
+  Future<void> deleteStudent(int userId) async {
+    final db = await database;
+
+    await db.delete('students', where: 'user_id = ?', whereArgs: [userId]);
+    await db.delete('users', where: 'id = ?', whereArgs: [userId]);
+  }
+// GET approved student by roll/index
+  Future<Student?> getApprovedStudentByRoll(String roll) async {
+    final db = await database;
+
+    final res = await db.rawQuery('''
+    SELECT s.* FROM students s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.roll = ? AND u.approved = 1
+  ''', [roll]);
+
+    if (res.isNotEmpty) {
+      return Student.fromMap(res.first);
+    }
+    return null;
+  }
+
+// GET student by userId (for student dashboard)
+  Future<Student?> getStudentByUserId(int userId) async {
+    final db = await database;
+    final res =
+    await db.query('students', where: 'user_id = ?', whereArgs: [userId]);
+
+    if (res.isNotEmpty) {
+      return Student.fromMap(res.first);
+    }
+    return null;
+  }
+// 🔢 Get next auto roll number
+  Future<String> getNextStudentRoll() async {
+    final db = await database;
+
+    final res = await db.rawQuery(
+      'SELECT MAX(CAST(roll AS INTEGER)) as maxRoll FROM students',
+    );
+
+    if (res.isNotEmpty && res.first['maxRoll'] != null) {
+      final next = (res.first['maxRoll'] as int) + 1;
+      return next.toString();
+    }
+
+    // First student roll
+    return '1001';
   }
 
 
